@@ -4,12 +4,12 @@
     <class>org.jivesoftware.openfire.plugin.MonitoringPlugin</class>
     <name>Monitoring Service</name>
     <description>Monitors conversations and statistics of the server.</description>
-    <author>Jive Software</author>
-    <version>1.5.3</version>
-    <date>2/15/2016</date>
+    <author>Jive Software - Customised by Abletech</author>
+    <version>1.5.3.1</version>
+    <date>4/14/2016</date>
     <minServerVersion>4.0.0</minServerVersion>
     <databaseKey>monitoring</databaseKey>
-    <databaseVersion>4</databaseVersion>
+    <databaseVersion>5</databaseVersion>
 
     <adminconsole>
         <tab id="tab-server">
