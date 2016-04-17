@@ -86,7 +86,7 @@ public class ConversationManager implements Startable, ComponentEventListener{
 	private static final String UPDATE_CONVERSATION = "UPDATE ofConversation SET lastActivity=?, messageCount=? WHERE conversationID=?";
 	private static final String UPDATE_PARTICIPANT = "UPDATE ofConParticipant SET leftDate=? WHERE conversationID=? AND bareJID=? AND jidResource=? AND joinedDate=?";
 	private static final String INSERT_MESSAGE = "INSERT INTO ofMessageArchive(messageID, conversationID, fromJID, fromJIDResource, toJID, toJIDResource, sentDate, body, stanza) "
-			+ "VALUES (?,?,?,?,?,?,?,?,?)";
+			+ "VALUES (?,?,?,?,?,?,?,?,?, ?)";
 	private static final String CONVERSATION_COUNT = "SELECT COUNT(*) FROM ofConversation";
 	private static final String MESSAGE_COUNT = "SELECT COUNT(*) FROM ofMessageArchive";
 	private static final String DELETE_CONVERSATION_1 = "DELETE FROM ofMessageArchive WHERE conversationID=?";
@@ -646,6 +646,18 @@ public class ConversationManager implements Startable, ComponentEventListener{
 	}
 
 	/**
+	 * Entry point to processMessage() to avoid altering existing plugin code when adding subject
+	 * @param roomJID
+	 * @param sender
+	 * @param nickname
+	 * @param body
+	 * @param date
+	 */
+	void processMessage(JID roomJID, JID sender, String nickname, String body, Date date){
+		processMessage(roomJID, sender, nickname, body, date, null);
+	}
+
+	/**
 	 * Processes an incoming message of a one-to-one chat. The message will mapped to a conversation and then queued for storage if archiving is
 	 * turned on.
 	 *
@@ -659,8 +671,10 @@ public class ConversationManager implements Startable, ComponentEventListener{
 	 * 			  String encoded message stanza
 	 * @param date
 	 *            date when the message was sent.
+	 * @param subject
+	 * 			  the subject of this message           
 	 */
-	void processMessage(JID sender, JID receiver, String body, String stanza, Date date) {
+	void processMessage(JID sender, JID receiver, String body, String stanza, Date date, String subject) {
 		String conversationKey = getConversationKey(sender, receiver);
 		synchronized (conversationKey.intern()) {
 			Conversation conversation = conversations.get(conversationKey);
@@ -714,7 +728,13 @@ public class ConversationManager implements Startable, ComponentEventListener{
 			if (messageArchivingEnabled) {
 				if (body != null) {
 					/* OF-677 - Workaround to prevent null messages being archived */
-					messageQueue.add(new ArchivedMessage(conversation.getConversationID(), sender, receiver, date, body, stanza, false));
+					if(subject == null){
+						messageQueue.add(new ArchivedMessage(conversation.getConversationID(), sender, receiver, date, body, stanza, false));
+					}
+					else{
+						messageQueue.add(new ArchivedMessage(conversation.getConversationID(), sender, receiver, date, body, stanza, false, subject));
+					}
+
 				}
 			}
 			// Notify listeners of the conversation update.
@@ -723,6 +743,19 @@ public class ConversationManager implements Startable, ComponentEventListener{
 			}
 		}
 	}
+	
+	/**
+	 * Entry point to processRomMessage() to avoid altering existing plugin code when adding nhiNumber
+	 * @param roomJID
+	 * @param sender
+	 * @param nickname
+	 * @param body
+	 * @param date
+	 */
+	void processRoomMessage(JID roomJID, JID sender, String nickname, String body, Date date){
+		processRoomMessage(roomJID, sender, nickname, body, date, null);
+	}
+
 
 	/**
 	 * Processes an incoming message sent to a room. The message will mapped to a conversation and then queued for storage if archiving is turned on.
@@ -737,8 +770,10 @@ public class ConversationManager implements Startable, ComponentEventListener{
 	 *            the message sent to the room.
 	 * @param date
 	 *            date when the message was sent.
+	 * @param subject
+	 * 			  the subject of this message.
 	 */
-	void processRoomMessage(JID roomJID, JID sender, String nickname, String body, Date date) {
+	void processRoomMessage(JID roomJID, JID sender, String nickname, String body, Date date, String subject) {
 		String conversationKey = getRoomConversationKey(roomJID);
 		synchronized (conversationKey.intern()) {
 			Conversation conversation = conversations.get(conversationKey);
@@ -776,7 +811,13 @@ public class ConversationManager implements Startable, ComponentEventListener{
 				JID jid = new JID(roomJID + "/" + nickname);
 				if (body != null) {
 					/* OF-677 - Workaround to prevent null messages being archived */
-					messageQueue.add(new ArchivedMessage(conversation.getConversationID(), sender, jid, date, body, "", false));
+					if(subject == null){
+						messageQueue.add(new ArchivedMessage(conversation.getConversationID(), sender, jid, date, body, "", false));
+					}
+					else{
+						messageQueue.add(new ArchivedMessage(conversation.getConversationID(), sender, jid, date, body, "", false, subject));
+					}
+
 				}
 			}
 			// Notify listeners of the conversation update.
@@ -1000,6 +1041,7 @@ public class ConversationManager implements Startable, ComponentEventListener{
 						pstmt.setLong(7, message.getSentDate().getTime());
 						DbConnectionManager.setLargeTextField(pstmt, 8, message.getBody());
 						DbConnectionManager.setLargeTextField(pstmt, 9, message.getStanza());
+						pstmt.setString(10, message.getSubject());
 						if (DbConnectionManager.isBatchUpdatesSupported()) {
 							pstmt.addBatch();
 						} else {

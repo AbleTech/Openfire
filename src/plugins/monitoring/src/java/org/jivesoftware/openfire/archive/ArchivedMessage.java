@@ -36,6 +36,7 @@ public class ArchivedMessage {
     private Date sentDate;
     private String body;
     private String stanza;
+    private String subject;
     private boolean roomEvent;
 
     /**
@@ -61,6 +62,11 @@ public class ArchivedMessage {
     public ArchivedMessage(long conversationID, JID fromJID, JID toJID, Date sentDate, String body, String stanza, boolean roomEvent) {
     	this(conversationID, fromJID, toJID, sentDate, body, roomEvent);
     	this.stanza = stanza;
+    }
+
+    public ArchivedMessage(long conversationID, JID fromJID, JID toJID, Date sentDate, String body, String stanza, boolean roomEvent, String subject) {
+    	this(conversationID, fromJID, toJID, sentDate, body, stanza, roomEvent);
+    	this.subject = subject;
     }
 
     /**
@@ -117,6 +123,15 @@ public class ArchivedMessage {
     	return stanza;
     }
 
+    /**
+     * The 'subject' for this message.
+     * @return the 'subject' for this message (may be null)
+     */
+    public String getSubject(){
+    	return subject;
+    }
+
+    
     /**
      * Returns true if the message belongs to a room event. Examples of room events are:
      * user joined the room or user left the room.

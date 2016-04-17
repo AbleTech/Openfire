@@ -25,6 +25,8 @@ import org.jivesoftware.openfire.interceptor.PacketInterceptor;
 import org.jivesoftware.openfire.interceptor.PacketRejectedException;
 import org.jivesoftware.openfire.session.Session;
 import org.picocontainer.Startable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -47,6 +49,8 @@ public class ArchiveInterceptor implements PacketInterceptor, Startable {
 
     private ConversationManager conversationManager;
 
+	private static final Logger Log = LoggerFactory.getLogger(ArchiveInterceptor.class);
+	
     public ArchiveInterceptor(ConversationManager conversationManager) {
         this.conversationManager = conversationManager;
     }
@@ -73,6 +77,15 @@ public class ArchiveInterceptor implements PacketInterceptor, Startable {
                     // Process this event in the senior cluster member or local JVM when not in a cluster
                     if (ClusterManager.isSeniorClusterMember()) {
                         conversationManager.processMessage(message.getFrom(), message.getTo(), message.getBody(), message.toXML(), new Date());
+                    	Log.debug("Subject: " + message.getSubject());
+                    	String subject = message.getSubject();
+                    	if(subject == null){
+                    		conversationManager.processMessage(message.getFrom(), message.getTo(), message.getBody(), message.toXML(), new Date());
+                    	}
+                    	else{
+                    		conversationManager.processMessage(message.getFrom(), message.getTo(), message.getBody(), message.toXML(), new Date(), subject);
+                    	}
+
                     }
                     else {
                         JID sender = message.getFrom();
