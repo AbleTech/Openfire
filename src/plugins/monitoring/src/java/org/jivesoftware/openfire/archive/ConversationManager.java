@@ -85,8 +85,8 @@ public class ConversationManager implements Startable, ComponentEventListener{
 
 	private static final String UPDATE_CONVERSATION = "UPDATE ofConversation SET lastActivity=?, messageCount=? WHERE conversationID=?";
 	private static final String UPDATE_PARTICIPANT = "UPDATE ofConParticipant SET leftDate=? WHERE conversationID=? AND bareJID=? AND jidResource=? AND joinedDate=?";
-	private static final String INSERT_MESSAGE = "INSERT INTO ofMessageArchive(messageID, conversationID, fromJID, fromJIDResource, toJID, toJIDResource, sentDate, body, stanza) "
-			+ "VALUES (?,?,?,?,?,?,?,?,?, ?)";
+	private static final String INSERT_MESSAGE = "INSERT INTO ofMessageArchive(messageID, conversationID, fromJID, fromJIDResource, toJID, toJIDResource, sentDate, body, stanza, subject) "
+			+ "VALUES (?,?,?,?,?,?,?,?,?,?)";
 	private static final String CONVERSATION_COUNT = "SELECT COUNT(*) FROM ofConversation";
 	private static final String MESSAGE_COUNT = "SELECT COUNT(*) FROM ofMessageArchive";
 	private static final String DELETE_CONVERSATION_1 = "DELETE FROM ofMessageArchive WHERE conversationID=?";
@@ -1029,7 +1029,6 @@ public class ConversationManager implements Startable, ComponentEventListener{
 					ArchivedMessage message;
 					
 					int msgCount = getArchivedMessageCount();
-					
 					int count = 0;
 					while ((message = messageQueue.poll()) != null) {
 						pstmt.setInt(1, ++msgCount);
