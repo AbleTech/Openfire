@@ -76,8 +76,6 @@ public class ArchiveInterceptor implements PacketInterceptor, Startable {
                 if (conversationManager.isConversation(message)) {
                     // Process this event in the senior cluster member or local JVM when not in a cluster
                     if (ClusterManager.isSeniorClusterMember()) {
-                        conversationManager.processMessage(message.getFrom(), message.getTo(), message.getBody(), message.toXML(), new Date());
-                    	Log.debug("Subject: " + message.getSubject());
                     	String subject = message.getSubject();
                     	if(subject == null){
                     		conversationManager.processMessage(message.getFrom(), message.getTo(), message.getBody(), message.toXML(), new Date());
